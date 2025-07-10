@@ -1,14 +1,44 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 
-OUTDIR=dist
+set -e
 
 ./script/patch-npm-version.ts
 
-rm -rf $OUTDIR
-npm run build
+VERSION=$(jq -r '.version' package.json )
+npm version $VERSION --workspaces --force
 
-if [ "$APPCENTER_BRANCH" == "next" ]; then
-    npm publish --ignore-scripts --tag next
-else
-    npm publish --ignore-scripts # Don't rebuild
-fi
+# Publish core
+pushd packages/quicktype-core
+npm publish
+popd
+
+# Publish typescript input
+pushd packages/quicktype-typescript-input
+jq --arg version $VERSION \
+    '.dependencies."quicktype-core" = $version' \
+    package.json > package.1.json
+mv package.1.json package.json
+npm publish
+popd
+
+# Publish graphql input
+pushd packages/quicktype-graphql-input
+jq --arg version $VERSION \
+    '.dependencies."quicktype-core" = $version' \
+    package.json > package.1.json
+mv package.1.json package.json
+npm publish
+popd
+
+# Publish quicktype
+jq --arg version $VERSION \
+    '.dependencies."quicktype-core" = $version | .dependencies."quicktype-graphql-input" = $version | .dependencies."quicktype-typescript-input" = $version' \
+    package.json > package.1.json
+mv package.1.json package.json
+npm publish
+
+
+# Publish vscode extension
+pushd packages/quicktype-vscode
+npm run pub
+popd

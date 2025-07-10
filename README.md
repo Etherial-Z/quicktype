@@ -1,14 +1,13 @@
-![](quicktype-logo.svg)
+![](https://raw.githubusercontent.com/quicktype/quicktype/master/media/quicktype-logo.svg?sanitize=true)
 
 [![npm version](https://badge.fury.io/js/quicktype.svg)](https://badge.fury.io/js/quicktype)
-[![Build status](https://badge.buildkite.com/147309f9f492c2af1ea53df922be7140ba4035dbb31f61ee1e.svg)](https://buildkite.com/typeguard/quicktype-master)
-[![Join us in Slack](http://slack.quicktype.io/badge.svg)](http://slack.quicktype.io/)
+![Build status](https://github.com/quicktype/quicktype/actions/workflows/master.yaml/badge.svg)
 
-`quicktype` generates strongly-typed models and serializers from JSON, JSON Schema, and [GraphQL queries](https://blog.quicktype.io/graphql-with-quicktype/), making it a breeze to work with JSON type-safely in any programming language.
+`quicktype` generates strongly-typed models and serializers from JSON, JSON Schema, TypeScript, and [GraphQL queries](https://blog.quicktype.io/graphql-with-quicktype/), making it a breeze to work with JSON type-safely in many programming languages.
 
-* [Try `quicktype` in your browser](https://app.quicktype.io).
-* View [awesome JSON APIs](https://github.com/typeguard/awesome-typed-datasets) that have been strongly typed with `quicktype`.
-* Read ['A first look at quicktype'](http://blog.quicktype.io/first-look/) for more introduction.
+-   [Try `quicktype` in your browser](https://app.quicktype.io).
+-   Read ['A first look at quicktype'](http://blog.quicktype.io/first-look/) for more introduction.
+-   If you have any questions, check out the [FAQ](FAQ.md) first.
 
 ### Supported Inputs
 
@@ -18,17 +17,19 @@
 | TypeScript | GraphQL queries |
 | ---------- | --------------- |
 
-
 ### Target Languages
 
-| [Ruby](https://app.quicktype.io/#l=ruby) | [JavaScript](https://app.quicktype.io/#l=js) | [Flow](https://app.quicktype.io/#l=flow) | [Rust](https://app.quicktype.io/#l=rust) |
-| ------------------------------------------ | ----------------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| [Ruby](https://app.quicktype.io/#l=ruby) | [JavaScript](https://app.quicktype.io/#l=js) | [Flow](https://app.quicktype.io/#l=flow) | [Rust](https://app.quicktype.io/#l=rust) | [Kotlin](https://app.quicktype.io/#l=kotlin) |
+| ---------------------------------------- | -------------------------------------------- | ---------------------------------------- | ---------------------------------------- | -------------------------------------------- |
 
-| [C#](https://app.quicktype.io/#l=cs) | [Go](https://app.quicktype.io/#l=go) | [C++](https://app.quicktype.io/#l=cpp) | [Java](https://app.quicktype.io/#l=java) | [TypeScript](https://app.quicktype.io/#l=ts) |
-| ------------------------------------ | ------------------------------------ | -------------------------------------- | ---------------------------------------- | -------------------------------------------- |
+| [Dart](https://app.quicktype.io/#l=dart) | [Python](https://app.quicktype.io/#l=python) | [C#](https://app.quicktype.io/#l=cs) | [Go](https://app.quicktype.io/#l=go) | [C++](https://app.quicktype.io/#l=cpp) |
+| ---------------------------------------- | -------------------------------------------- | ------------------------------------ | ------------------------------------ | -------------------------------------- |
 
-| [Swift](https://app.quicktype.io/#l=swift) | [Objective-C](https://app.quicktype.io/#l=objc) | [Elm](https://app.quicktype.io/#l=elm) | [JSON Schema](https://app.quicktype.io/#l=schema) |
-| ------------------------------------------ | ----------------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| [Java](https://app.quicktype.io/#l=java) | [Scala](https://app.quicktype.io/#l=scala3) | [TypeScript](https://app.quicktype.io/#l=ts) | [Swift](https://app.quicktype.io/#l=swift) | [Objective-C](https://app.quicktype.io/#l=objc) | [Elm](https://app.quicktype.io/#l=elm) |
+| ---------------------------------------- | ------------------------------------------- | -------------------------------------------- | ------------------------------------------ | ----------------------------------------------- | -------------------------------------- |
+
+| [JSON Schema](https://app.quicktype.io/#l=schema) | [Pike](https://app.quicktype.io/#l=pike) | [Prop-Types](https://app.quicktype.io/#l=javascript-prop-types) | [Haskell](https://app.quicktype.io/#l=haskell) | [PHP](https://app.quicktype.io/#l=php) |
+| ------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------- |
 
 _Missing your favorite language? Please implement it!_
 
@@ -41,15 +42,6 @@ For the best CLI, we recommend installing `quicktype` globally via `npm`:
 ```bash
 npm install -g quicktype
 ```
-
-Other options:
-
-* [Homebrew](http://formulae.brew.sh/formula/quicktype) _(infrequently updated)_
-* [Xcode extension](https://itunes.apple.com/us/app/paste-json-as-code-quicktype/id1330801220?mt=12)\*
-* [VSCode extension](https://marketplace.visualstudio.com/items/quicktype.quicktype)\*
-* [Visual Studio extension](https://marketplace.visualstudio.com/items?itemName=typeguard.quicktype-vs)\*
-
-<small>\* limited functionality</small>
 
 ## Using `quicktype`
 
@@ -89,7 +81,7 @@ The recommended way to use `quicktype` is to generate a JSON schema from sample 
 
 ```bash
 # First, infer a JSON schema from a sample.
-quicktype pokedex.json -o schema.json
+quicktype pokedex.json -l schema -o schema.json
 
 # Review the schema, make changes,
 # and commit it to your project repo.
@@ -111,9 +103,9 @@ You can achieve a similar result by writing or generating a [TypeScript](http://
 
 ```typescript
 interface Person {
-  name: string;
-  nickname?: string; // an optional property
-  luckyNumber: number;
+    name: string;
+    nickname?: string; // an optional property
+    luckyNumber: number;
 }
 ```
 
@@ -126,19 +118,106 @@ quicktype pokedex.json -o pokedex.ts --just-types
 quicktype pokedex.ts -o src/ios/models.swift
 ```
 
+### Calling `quicktype` from JavaScript
+
+You can use `quicktype` as a JavaScript function within `node` or browsers. First add the `quicktype-core` package:
+
+```bash
+$ npm install quicktype-core
+```
+
+In general, first you create an `InputData` value with one or more JSON samples, JSON schemas, TypeScript sources, or other supported input types. Then you call `quicktype`, passing that `InputData` value and any options you want.
+
+```javascript
+import {
+    quicktype,
+    InputData,
+    jsonInputForTargetLanguage,
+    JSONSchemaInput,
+    FetchingJSONSchemaStore
+} from "quicktype-core";
+
+async function quicktypeJSON(targetLanguage, typeName, jsonString) {
+    const jsonInput = jsonInputForTargetLanguage(targetLanguage);
+
+    // We could add multiple samples for the same desired
+    // type, or many sources for other types. Here we're
+    // just making one type from one piece of sample JSON.
+    await jsonInput.addSource({
+        name: typeName,
+        samples: [jsonString]
+    });
+
+    const inputData = new InputData();
+    inputData.addInput(jsonInput);
+
+    return await quicktype({
+        inputData,
+        lang: targetLanguage
+    });
+}
+
+async function quicktypeJSONSchema(targetLanguage, typeName, jsonSchemaString) {
+    const schemaInput = new JSONSchemaInput(new FetchingJSONSchemaStore());
+
+    // We could add multiple schemas for multiple types,
+    // but here we're just making one type from JSON schema.
+    await schemaInput.addSource({ name: typeName, schema: jsonSchemaString });
+
+    const inputData = new InputData();
+    inputData.addInput(schemaInput);
+
+    return await quicktype({
+        inputData,
+        lang: targetLanguage
+    });
+}
+
+async function main() {
+    const { lines: swiftPerson } = await quicktypeJSON("swift", "Person", jsonString);
+    console.log(swiftPerson.join("\n"));
+
+    const { lines: pythonPerson } = await quicktypeJSONSchema("python", "Person", jsonSchemaString);
+    console.log(pythonPerson.join("\n"));
+}
+
+main();
+```
+
+The argument to `quicktype` is a complex object with many optional properties. [Explore its definition](https://github.com/quicktype/quicktype/blob/master/packages/quicktype-core/src/Run.ts#L637) to understand what options are allowed.
+
+### Adding Custom logic or Rendering:
+
+Quicktype supports creating your own custom languages and rendering output, you can extend existing classes or create your own to be using by the `quicktype function`.<br/>
+Check out [this guide](./doc/CustomRenderer.md) for more info.
+
 ## Contributing
 
-`quicktype` is [Open Source](LICENSE) and we love contributors! In fact, we have a [list of issues](https://github.com/quicktype/quicktype/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Ahelp-wanted) that are low-priority for us, but for which we'd happily accept contributions. Support for new target languages is also strongly desired. If you'd like to contribute, need help with anything at all, or would just like to talk things over, come [join us on Slack](http://slack.quicktype.io).
+`quicktype` is [Open Source](LICENSE) and we love contributors! In fact, we have a [list of issues](https://github.com/quicktype/quicktype/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Ahelp-wanted) that are low-priority for us, but for which we'd happily accept contributions. Support for new target languages is also strongly desired. If you'd like to contribute, need help with anything at all, or would just like to talk things over, come [join us on Slack](http://slack.quicktype.io/).
 
 ### Setup, Build, Run
 
 `quicktype` is implemented in TypeScript and requires `nodejs` and `npm` to build and run.
 
+First, install `typescript` globally via `npm`:
+
 Clone this repo and do:
 
+#### macOS / Linux
+
 ```bash
+nvm use
 npm install
 script/quicktype # rebuild (slow) and run (fast)
+```
+
+#### Windows
+
+```bash
+npm install --ignore-scripts # Install dependencies
+npm install -g typescript # Install typescript globally
+tsc --project src/cli # Rebuild
+node dist\cli\index.js # Run
 ```
 
 ### Edit
@@ -167,23 +246,7 @@ files, URLs, or add other options.
 
 ### Test
 
-`quicktype` has many complex test dependencies:
-
-* `dotnetcore` SDK
-* Java, Maven
-* `elm` tools
-* `g++` C++ compiler
-* `golang` stack
-* `swift` compiler
-* `clang` and Objective-C Foundation (must be tested separately on macOS)
-* `rust` tools
-
-We've assembled all of these tools in a Docker container that you build and test within:
-
 ```bash
-# Build and attach to Docker container
-script/dev
-
 # Run full test suite
 npm run test
 
